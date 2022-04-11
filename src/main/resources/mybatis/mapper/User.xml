@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.twg.article.dao.UserDao">
+	<!-- 配置结果集类型 -->
+	<resultMap type="com.twg.article.model.User" id="userMap">
+		<!-- property对应类字段   column对应表字段 -->
+		<id property="id" column="id"/>
+		<result property="userName" column="userName"/>
+		<result property="userAge" column="userAge"/>
+		<result property="userAddress" column="userAddress"/>
+	</resultMap>
+	
+	<!-- 根据ID查询数据 -->
+    <select id="selectUserByID" parameterType="int" resultType="com.twg.article.model.User">
+        select * from user where id = #{id}
+    </select>
+    <!-- 查询所有数据总数 -->
+    <select id="countAll" resultType="int">
+    	select count(*) from user
+    </select>
+    <!-- 分页查询 -->
+    <select id="pageUsers" parameterType="com.twg.article.util.PageUtil" resultMap="userMap">
+   		select * from user limit #{pageStart},#{pageSize}
+   	</select>
+    <!-- 查询所有数据 -->
+   	<select id="selectUsers" resultMap="userMap">
+   		select * from user
+   	</select>
+   	<!-- 添加一条数据  useGeneratedKeys是否让主键自增   keyProperty让ID对应主键-->
+   	<insert id="addUser" parameterType="com.twg.article.model.User" useGeneratedKeys="true" keyProperty="id">
+   		insert into user(userName,userAge,userAddress) values(#{userName},${userAge},#{userAddress})
+   	</insert>
+   	<!-- 更新数据 -->
+   	<update id="updateUser" parameterType="com.twg.article.model.User">
+   		update user set userName=#{userName},userAge=#{userAge},userAddress=#{userAddress} where id = #{id} 
+   	</update>
+   	<!-- 根据ID删除数据 -->
+   	<delete id="deleteUser" parameterType="int">
+   		delete from user where id = #{id}
+   	</delete>
+   	<!-- 根据关键字模糊查询 -->
+   	<select id="pageFromUser" parameterType="com.twg.article.util.PageUtil" resultMap="userMap">
+        select * from user where 1 = 1
+        <if test="user.id > 0">
+            and id = #{user.id}
+        </if>
+        <if test="user.userName != null">
+            and userName like '%${user.userName}%'
+        </if>
+        <if test="user.userAge > 0">
+            and userAge = #{user.userAge}
+        </if>
+        <if test="user.userAddress != null">
+            and userAddress like '%${user.userAddress}%'
+        </if>
+        limit #{pageStart},#{pageSize}
+    </select>
+    <!-- 模糊查询的总条数 -->
+    <select id="countFromUser" parameterType="com.twg.article.model.User" resultType="int">
+        select count(*) from user where 1 = 1
+        <if test="id > 0">
+            and id = ${id}
+        </if>
+        <if test="userName != null">
+            and userName like '%${userName}%'
+        </if>
+        <if test="userAge > 0">
+            and userAge = ${userAge}
+        </if>
+        <if test="userAddress != null">
+            and userAddress like '%${userAddress}%'
+        </if>
+    </select>
+    <!-- 根据姓名查询 -->
+    <select id="selectUserByName" parameterType="java.lang.String" resultMap="userMap">
+    	select * from user where userName like '%${name}%'
+    </select>
+</mapper>

@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.twg.article.dao.ArticleDao">
+	<!-- 根据userId查询Article：方式一 -->
+	<resultMap type="com.twg.article.model.Article" id="ArticleMap">
+		<id property="id" column="id"/>
+		<result property="title" column="title"/>
+		<result property="content" column="content"/>
+		<result property="articleURL" column="articleURL"/>
+		<association property="user" column="userId" javaType="com.twg.article.model.User" >
+			<id property="id" column="userId"/>
+			<result property="userName" column="userName"/>
+			<result property="userAge" column="userAge"/>
+			<result property="userAddress" column="userAddress"/>
+		</association>
+		<!-- <collection property="" ofType=""></collection> -->
+	</resultMap>
+	
+	<!-- 根据userId查询Article：方式二 -->
+	<resultMap type="com.twg.article.model.User" id="userMap">
+		<!-- property对应类字段   column对应表字段 -->
+		<id property="id" column="userId"/>
+		<result property="userName" column="userName"/>
+		<result property="userAge" column="userAge"/>
+		<result property="userAddress" column="userAddress"/>
+	</resultMap>
+	
+	<resultMap type="com.twg.article.model.Article" id="ArticleMap2">
+		<!-- property对应类字段   column对应表字段 -->
+		<id property="id" column="id"/>
+		<result property="title" column="title"/>
+		<result property="content" column="content"/>
+		<result property="articleURL" column="articleURL"/>
+		<association property="user" javaType="com.twg.article.model.User" resultMap="userMap2" />
+	</resultMap>
+	
+	
+	<!-- 查询所有数据总数 -->
+	<select id="selectArticleCount" resultType="int">
+		select count(*) from article
+	</select>
+	<!-- 查询指定作者所有文章总数 -->
+	<select id="selectArticleCountByUser" parameterType="int" resultType="int">
+		select count(*) from article where article.userId=#{userId}
+	</select>
+	<!-- 根据userID查询数据 -->
+	<select id="selectArticleByID" parameterType="int" resultMap="ArticleMap">
+		select 
+			article.id,article.title,article.content,
+			article.userId,user.userName,user.userAge,userAddress,
+			article.articleURL
+		from 
+			user,article 
+		where 
+			user.id = article.userId 
+			and user.id = #{id}
+	</select>
+	
+	<!-- 分页 根据userID查询数据 -->
+	<select id="pageArticleByUser" parameterType="com.twg.article.util.PageUtil" resultMap="ArticleMap">
+		select 
+			article.id,article.title,article.content,
+			article.userId,user.userName,user.userAge,userAddress,
+			article.articleURL
+		from 
+			user,article 
+		where 
+			user.id = article.userId 
+			and user.id = #{id} order by article.id ASC limit #{pageStart},#{pageSize}
+	</select>
+	
+	<!-- 根据userId查询Article：方式三 -->
+    <select id="getUser" parameterType="int" resultType="com.twg.article.model.User">
+        select * from user where id = #{id}
+    </select>
+    <!-- 使用resultMap映射实体类和字段之间的一一对应关系 -->
+    <resultMap type="com.twg.article.model.Article" id="ArticleMap3">
+         <id property="id" column="id"/>
+         <result property="title" column="title"/>
+         <result property="content" column="content"/>
+         <result property="articleURL" column="articleURL"/>
+         <association property="user" column="userId" javaType="com.twg.article.model.User" select="getUser"/>
+         <!-- 三表查询，关联的这个表是个集合 -->
+         <!-- <collection property="" column="" ofType="" select=""></collection> -->
+      </resultMap>
+	<select id="getArticleListByUserId" parameterType="int" resultMap="ArticleMap3">
+        select * from article where userId = #{id}
+    </select>
+      
+	<!-- 根据Article的ID查询Article -->
+	<select id="getArticleListById" parameterType="int" resultMap="ArticleMap4">
+        select * from article where id = #{id}
+    </select>
+    <!-- 使用resultMap映射实体类和字段之间的一一对应关系 -->
+    <resultMap type="com.twg.article.model.Article" id="ArticleMap4">
+         <id property="id" column="id"/>
+         <result property="title" column="title"/>
+         <result property="content" column="content"/>
+         <result property="articleURL" column="articleURL"/>
+         <association property="user" column="userId" select="getUser2"/>
+         <!-- 三表查询，关联的这个表是个集合 -->
+         <!-- <collection property="" column="" ofType="" select=""></collection> -->
+    </resultMap>
+      
+    <select id="getUser2" parameterType="int" resultType="com.twg.article.model.User">
+         select * from user where id = #{id}
+    </select>
+    <!-- 查询所有Article所有数据 -->
+    <select id="selectArticleList" resultMap="ArticleMap">
+    	select 
+    		article.id,article.title,article.content,
+    		article.userId,user.userName,user.userAge,user.userAddress,
+    		article.articleURL
+    	from 
+    		user,article
+    	where
+    		user.id=article.userId order by article.id ASC
+    </select>
+    
+    <!-- 分页查询所有Article所有数据 -->
+    <select id="pageArticle" parameterType="com.twg.article.util.PageUtil" resultMap="ArticleMap">
+    	select 
+    		article.id,article.title,article.content,
+    		article.userId,user.userName,user.userAge,user.userAddress,
+    		article.articleUrl
+    	from 
+    		user,article
+    	where
+    		user.id=article.userId order by article.id ASC limit #{pageStart},#{pageSize}
+    </select>
+    
+    <!-- 新增一条数据 -->
+	<insert id="addArticle" parameterType="com.twg.article.model.Article" useGeneratedKeys="true" keyProperty="id">
+		insert into article (title,content,userId,articleURL) values (#{title},#{content},#{user.id},#{articleURL})
+	</insert>
+	<!-- 根据ID修改一条数据 -->
+	<update id="updateArticle" parameterType="com.twg.article.model.Article">
+		update article 
+		<set>
+			<if test="title!=null">
+				title = #{title},
+			</if>
+			<if test="content!=null">
+				content = #{content},
+			</if>
+			<if test="user!=null">
+				userId = #{user.id},
+			</if>
+			<if test="articleURL!=null">
+				articleURL = #{articleURL}
+			</if>
+		</set>
+		where id = #{id}
+	</update>
+	<!-- 根据userId删除Article -->
+	<delete id="deleteArticleByUserId" parameterType="int">
+		delete from article where userId = #{userId}
+	</delete>
+	<!-- 根据ArticleId删除Article -->
+	<delete id="deleteArticleById" parameterType="int">
+		delete from article where id = #{id}
+	</delete>
+	<!-- 模糊查询筛选后分页展示 -->
+	<select id="pageFilterArticle" parameterType="com.twg.article.util.PageUtil" resultMap="ArticleMap">
+		select 
+    		article.id,article.title,article.content,
+    		article.userId,user.userName,user.userAge,user.userAddress,
+    		article.articleURL
+    	from 
+    		user,article
+    	where
+    		user.id=article.userId
+    	<if test="article.id > 0">
+            and article.id = ${article.id}
+        </if>
+        <if test="article.title != null">
+            and article.title like '%${article.title}%'
+        </if>
+        <if test="article.user !=null">
+            and user.userName like '%${article.user.userName}%'
+        </if>
+        <if test="article.content != null">
+            and article.content like '%${article.content}%'
+        </if> 
+    		order by article.id ASC limit #{pageStart},#{pageSize}
+	</select>
+	<!-- 查询筛选后的总条数 -->
+	<select id="selectFilterCount" parameterType="com.twg.article.model.Article" resultType="int">
+		select 
+    		count(*)
+    	from 
+    		user,article
+    	where
+    		user.id=article.userId
+    	<if test="id > 0">
+            and article.id = ${id}
+        </if>
+        <if test="title != null">
+            and article.title like '%${title}%'
+        </if>
+        <if test="user !=null">
+            and user.userName like '%${user.userName}%'
+        </if>
+        <if test="content != null">
+            and article.content like '%${content}%'
+        </if> 
+    	
+	</select>
+</mapper>
